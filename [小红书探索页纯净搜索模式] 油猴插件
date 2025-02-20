@@ -1,0 +1,91 @@
+// ==UserScript==
+// @name         小红书探索页纯净搜索模式
+// @namespace    http://tampermonkey.net/
+// @version      1.1
+// @description  隐藏探索页所有推荐内容，仅保留搜索功能
+// @author       DeepSeek-R1
+// @match        https://www.xiaohongshu.com/explore
+// @icon         https://sns-web-img-qc.xhscdn.com/c8a83a40-ecfd-logo
+// @grant        GM_addStyle
+// @run-at       document-start
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // 精准屏蔽探索页推荐模块
+    const css = `
+        /* 保留搜索栏 */
+        .search-bar,
+        .search-container {
+            display: block !important;
+        }
+
+        /* 隐藏所有推荐流容器 */
+        div[class*="-feed"],
+        div[class*="recommend"],
+        div[class*="discovery"],
+        section[class*="recommend"] {
+            display: none !important;
+        }
+
+        /* 隐藏瀑布流布局 */
+        .waterfall-container,
+        .note-list {
+            visibility: hidden !important;
+            height: 0 !important;
+        }
+
+        /* 移除底部导航栏 */
+        .main-tab-bar {
+            opacity: 0 !important;
+            height: 0 !important;
+        }
+
+        /* 清理冗余元素 */
+        .banner-container,
+        .topic-container,
+        .hot-search,
+        .suggested-users {
+            display: none !important;
+        }
+
+        /* 保留搜索输入框 */
+        .search-input {
+            width: 90% !important;
+            margin: 10px auto !important;
+        }
+    `;
+
+    // 动态样式注入
+    GM_addStyle(css);
+
+    // 实时监控DOM变化
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            // 过滤新添加的推荐节点
+            mutation.addedNodes.forEach(node => {
+                if (node.nodeType === 1 && (
+                    node.classList.contains('note-item') ||
+                    node.querySelector('[class*="recommend"]')
+                )) {
+                    node.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    // 强制保持搜索框可见
+    setInterval(() => {
+        const searchBar = document.querySelector('.search-bar');
+        if (searchBar) {
+            searchBar.style.display = 'block';
+            searchBar.style.opacity = '1';
+        }
+    }, 1000);
+})();
